@@ -40,16 +40,19 @@ public class Shamir {
         System.out.print("Indiquez le nombre de bits : ");
         int nbrebits = scan.nextInt();
 
+        //tests
         if (nbrebits < 128 || nbrebits > 4096)
             throw new IllegalArgumentException("La clé doit être entre 128 et 4096 bits");
         if (nbrebits%8!=0)
             throw new ArithmeticException("La clé doit être transformable en bytes (divisible par 8)");
+
 
         System.out.print("Indiquez le nombre parts minimum : ");
         this.minParts = scan.nextInt();
         System.out.print("Indiquez le nombre de parts voulues : ");
         this.parts = scan.nextInt();
 
+        //test parts
         if (parts<minParts)
             throw new IllegalArgumentException("Le nombre de parts doit être supérieur ou égal au minimum");
 
