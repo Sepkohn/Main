@@ -39,10 +39,19 @@ public class Shamir {
 
         System.out.print("Indiquez le nombre de bits : ");
         int nbrebits = scan.nextInt();
+
+        if (nbrebits < 128 || nbrebits > 4096)
+            throw new IllegalArgumentException("La clé doit être entre 128 et 4096 bits");
+        if (nbrebits%8!=0)
+            throw new ArithmeticException("La clé doit être transformable en bytes (divisible par 8)");
+
         System.out.print("Indiquez le nombre parts minimum : ");
         this.minParts = scan.nextInt();
         System.out.print("Indiquez le nombre de parts voulues : ");
         this.parts = scan.nextInt();
+
+        if (parts<minParts)
+            throw new IllegalArgumentException("Le nombre de parts doit être supérieur ou égal au minimum");
 
         setSecret(nbrebits, minParts, parts);
     }
@@ -137,8 +146,7 @@ public class Shamir {
     }
 
     public void generateRandomKey(int byteLength) throws IllegalArgumentException {
-        if (byteLength < 16 || byteLength > 512)
-            throw new IllegalArgumentException("La clé doit être entre 16 et 512 bytes");
+
         SecureRandom random;
         byte bytes[];
 
@@ -168,5 +176,61 @@ public class Shamir {
         }
 
     }
+
+    public void ajoutPart()
+    {
+        System.out.print("Indiquez le nombre de parts à ajouter : ");
+        int nouveauNombre = scan.nextInt();
+
+        if(nouveauNombre<0)
+            throw new IllegalArgumentException("Veuillez entrer un nombre positif");
+
+
+        ajoutPart(nouveauNombre);
+    }
+
+    private void ajoutPart(int nouveauNombres)
+    {
+        int ancien = parts;
+
+        parts+=nouveauNombres;
+
+
+        int[] partx = new int[parts];
+        for(int i = 0; i<parts;i++)
+        {
+            //reprendre anciennes parts de X
+            if(i<ancien)
+                partx[i]=xparts[i];
+
+            //Nouvelles parts de X
+            else
+               partx[i]=i+1;
+        }
+        //transfert de tableau
+        xparts=partx;
+
+        BigInteger[] party = new BigInteger[parts];
+        for(int i = 0; i<parts;i++)
+        {
+            //reprendre anciennes parts de Y
+            if(i<ancien)
+                party[i]=yparts[i];
+
+            //Nouvelles parts de Y
+            else
+                trouveY(i);
+        }
+        //transfert de tableau
+        yparts=party;
+
+        System.out.println("Voici les nouvelles parts : ");
+        for(int i = ancien; i<parts; i++)
+        {
+            System.out.println("No : " + (i+1) + " // X = " + xparts[i] + " et Y = " + yparts[i]);
+        }
+
+    }
+
 
 }
