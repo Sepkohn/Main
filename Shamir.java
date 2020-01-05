@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 
-public class Shamir implements Serializable{
+public class Shamir implements Serializable {
 
     Scanner scan = new Scanner(System.in);
     private BigInteger secret;
@@ -24,150 +24,12 @@ public class Shamir implements Serializable{
 
     //private BigInteger gcd;
 
-    public void deroulementApllication() throws IOException {
-
-        if(secret==null) {
-            //Déserialisation
-            deserialisation();
-        }
-
-
-        // QB: j'ai bouclé pour valider un choix correcte
-        do {
-            System.out.println("Bienvenu sur Shamir's secret, Veuillez faire votre choix :");
-            System.out.println("1 - Création d'un secret");
-            System.out.println("2 - Ajout de parts");
-            System.out.println("3 - Suppression de parts");
-            System.out.println("4 - Retrouver le secret");
-            System.out.println("0 - fermeture du programme");
-            choix=scan.nextInt();
-        } while(choix<0||choix>4);
-
-        deroulementApplication(choix);
-    }
-
-    private void deroulementApplication(int userChoice) throws IOException {
-      /*  if(userChoice>4|| userChoice<0)
-            throw new ArithmeticException("Votre choix n'est pas valide !!");*/
-
-
-        switch (userChoice){
-            case(1):
-                setSecret();
-                break;
-            case(2):
-                ajoutPart();
-                break;
-            case(3):
-                //Methode de suppression
-                break;
-            //QB: Ce que j'ai tenté de faire à la fin mais dont je ne sais pas comment est construit la fonction de lagrange
-            case(4):
-                //methode pour trouver secret
-                findSecret();
-                break;
-
-            case(0):
-                //methode d'archivage (serialization + cloture programme)
-                saveSecret();
-
-                return;
-        }
-
-        deroulementApllication();
-    }
-
-    private void setSecret() {
-        if(secret!=null)
-        {
-            System.out.print("Un secret a déjà été défini !! impossible d'en créer un nouveau");
-            return;
-        }
-
-        System.out.print("Indiquez le nombre de bits : ");
-        int nbrebits = scan.nextInt();
-
-        //tests
-        if (nbrebits < 128 || nbrebits > 4096)
-            throw new IllegalArgumentException("La clé doit être entre 128 et 4096 bits");
-        if (nbrebits%8!=0)
-            throw new ArithmeticException("La clé doit être transformable en bytes (divisible par 8)");
-
-
-        System.out.print("Indiquez le nombre parts minimum : ");
-        this.minParts = scan.nextInt();
-        System.out.print("Indiquez le nombre de parts voulues : ");
-        this.parts = scan.nextInt();
-
-        //test parts
-        if (parts<minParts)
-            throw new IllegalArgumentException("Le nombre de parts doit être supérieur ou égal au minimum");
-
-        setSecret(nbrebits, minParts, parts);
-    }
-
-    private void setSecret(int nbrebits, int minParts, int parts) {
-
-
-        //Génération d'un secret et du nombre premier
-        generateRandomKey(nbrebits/8);
-
-        //je génère une part x (x=indice pour l'instant)
-        xparts = new int[parts];
-        for(int i = 0;i<xparts.length;i++ ) {
-            xparts[i]=i+1;
-        }
-
-        //Je trouve le Y
-        yparts = new BigInteger[parts];
-
-        for(int i = 0;i<parts;i++)
-        {
-            trouveY(i);
-        }
-
-        //imprimer les parts + meta
-        System.out.println("Voici les differentes parts : ");
-        imprimeParts(0);
-        System.out.println("les metadonnees sont les suivantes : " + prime);
-
-    }
-
-    private void imprimeParts(int debut) {
-
-
-        for(int i = debut;i<parts;i++)
-        {
-            System.out.println("No : " + (i+1) + " // X = " + xparts[i] + " et Y = " + yparts[i]);
-        }
-
-
-    }
-
-
-    private void trouveY(int indice)
-    {
-        BigInteger temp = new BigInteger("0");
-        BigInteger valueX = BigInteger.valueOf(xparts[indice]);
-
-
-        // la fonction récursive est (partFonction*valueX)+partFonction
-
-        for(int i = 0;i<=minParts;i++)
-        {
-            temp=valueX.multiply(temp);
-            temp=temp.add(partFonction);
-        }
-        //reduction de la part avec modulo nombre premier
-        yparts[indice]=temp.mod(prime);
-    }
     /**
-     *	INPUT a, b element de Z avec a >= b
-     *	OUTPUT g = gcd(a, b)
+     * INPUT a, b element de Z avec a >= b
+     * OUTPUT g = gcd(a, b)
      */
 
-    private static BigInteger multipleInverse(BigInteger a, BigInteger b)
-    {
+    private static BigInteger multipleInverse(BigInteger a, BigInteger b) {
         ArrayList<BigInteger> r = new ArrayList<>();
         ArrayList<BigInteger> q = new ArrayList<>();
         ArrayList<BigInteger> x = new ArrayList<>();
@@ -188,15 +50,15 @@ public class Shamir implements Serializable{
         do {
             i++;
 
-            q.add(i, r.get(i-1).divide(r.get(i)));
+            q.add(i, r.get(i - 1).divide(r.get(i)));
 
-            r.add(i+1, r.get(i-1).subtract(r.get(i).multiply(q.get(i))));
+            r.add(i + 1, r.get(i - 1).subtract(r.get(i).multiply(q.get(i))));
 
-            x.add(i+1, x.get(i-1).subtract(x.get(i).multiply(q.get(i))));
-            y.add(i+1, y.get(i-1).subtract(y.get(i).multiply(q.get(i))));
+            x.add(i + 1, x.get(i - 1).subtract(x.get(i).multiply(q.get(i))));
+            y.add(i + 1, y.get(i - 1).subtract(y.get(i).multiply(q.get(i))));
 
         }
-        while (r.get(i+1).compareTo(BigInteger.ZERO) > 0) ;
+        while (r.get(i + 1).compareTo(BigInteger.ZERO) > 0);
 
         BigInteger multInverse = y.get(i);
 
@@ -207,18 +69,146 @@ public class Shamir implements Serializable{
         return multInverse;
     }
 
+    public void deroulementApllication() throws IOException {
+
+        if (secret == null) {
+            //Déserialisation
+            deserialisation();
+        }
+
+
+        // QB: j'ai bouclé pour valider un choix correcte
+        do {
+            System.out.println("Bienvenu sur Shamir's secret, Veuillez faire votre choix :");
+            System.out.println("1 - Création d'un secret");
+            System.out.println("2 - Ajout de parts");
+            System.out.println("3 - Suppression de parts");
+            System.out.println("4 - Retrouver le secret");
+            System.out.println("0 - fermeture du programme");
+            choix = scan.nextInt();
+        } while (choix < 0 || choix > 4);
+
+        deroulementApplication(choix);
+    }
+
+    private void deroulementApplication(int userChoice) throws IOException {
+
+        switch (userChoice) {
+            case (1):
+                setSecret();
+                break;
+            case (2):
+                ajoutPart();
+                break;
+            case (3):
+                //Methode de suppression
+                break;
+            //QB: Ce que j'ai tenté de faire à la fin mais dont je ne sais pas comment est construit la fonction de lagrange
+            case (4):
+                //methode pour trouver secret
+                findSecret();
+                break;
+
+            case (0):
+                //methode d'archivage (serialization + cloture programme)
+                saveSecret();
+
+                return;
+        }
+
+        deroulementApllication();
+    }
+
+    private void setSecret() {
+        if (secret != null) {
+            System.out.print("Un secret a déjà été défini !! impossible d'en créer un nouveau");
+            return;
+        }
+
+        System.out.print("Indiquez le nombre de bits : ");
+        int nbrebits = scan.nextInt();
+
+        //tests
+        if (nbrebits < 128 || nbrebits > 4096)
+            throw new IllegalArgumentException("La clé doit être entre 128 et 4096 bits");
+        if (nbrebits % 8 != 0)
+            throw new ArithmeticException("La clé doit être transformable en bytes (divisible par 8)");
+
+
+        System.out.print("Indiquez le nombre parts minimum : ");
+        this.minParts = scan.nextInt();
+        System.out.print("Indiquez le nombre de parts voulues : ");
+        this.parts = scan.nextInt();
+
+        //test parts
+        if (parts < minParts)
+            throw new IllegalArgumentException("Le nombre de parts doit être supérieur ou égal au minimum");
+
+        setSecret(nbrebits, minParts, parts);
+    }
+
+    private void setSecret(int nbrebits, int minParts, int parts) {
+
+
+        //Génération d'un secret et du nombre premier
+        generateRandomKey(nbrebits / 8);
+
+        //je génère une part x (x=indice pour l'instant)
+        xparts = new int[parts];
+        for (int i = 0; i < xparts.length; i++) {
+            xparts[i] = i + 1;
+        }
+
+        //Je trouve le Y
+        yparts = new BigInteger[parts];
+
+        for (int i = 0; i < parts; i++) {
+            trouveY(i);
+        }
+
+        //imprimer les parts + meta
+        System.out.println("Voici les differentes parts : ");
+        imprimeParts(0);
+        System.out.println("les metadonnees sont les suivantes : " + prime);
+
+    }
+
+    private void imprimeParts(int debut) {
+
+
+        for (int i = debut; i < parts; i++) {
+            System.out.println("No : " + (i + 1) + " // X = " + xparts[i] + " et Y = " + yparts[i]);
+        }
+
+
+    }
+
+    private void trouveY(int indice) {
+        BigInteger temp = new BigInteger("0");
+        BigInteger valueX = BigInteger.valueOf(xparts[indice]);
+
+
+        for (int i = 0; i <= minParts; i++) {
+            temp = valueX.multiply(temp);
+            temp = temp.add(partFonction);
+        }
+
+        //reduction de la part avec modulo nombre premier
+        yparts[indice] = temp.mod(prime);
+
+    }
+
     private void generateRandomKey(int byteLength) throws IllegalArgumentException {
 
         SecureRandom random;
         byte[] bytes;
 
-        do{
+        do {
             random = new SecureRandom();
-            bytes = new byte[byteLength]; // 128 bits are converted to 16 bytes;
+            bytes = new byte[byteLength];
             random.nextBytes(bytes);
         }
-        while(bytes[0]!=1);
-
+        while (bytes[0] != 1);
 
 
         secret = new BigInteger(bytes);
@@ -231,20 +221,18 @@ public class Shamir implements Serializable{
 
         prime = secret.nextProbablePrime();
 
-        if(prime.bitLength()>byteLength*8)
-        {
+        if (prime.bitLength() > byteLength * 8) {
             generateRandomKey(byteLength);
         }
 
     }
 
-    private void ajoutPart()
-    {
-        if(secret!=null) {
+    private void ajoutPart() {
+        if (secret != null) {
             System.out.print("Indiquez le nombre de parts à ajouter : ");
             int nouveauNombre = scan.nextInt();
 
-            if(nouveauNombre<0)
+            if (nouveauNombre < 0)
                 throw new IllegalArgumentException("Veuillez entrer un nombre positif");
 
             ajoutPart(nouveauNombre);
@@ -252,46 +240,41 @@ public class Shamir implements Serializable{
 
     }
 
-    private void ajoutPart(int nouveauNombres)
-    {
+    private void ajoutPart(int nouveauNombres) {
         int ancien = parts;
 
-        parts+=nouveauNombres;
+        parts += nouveauNombres;
 
 
         int[] partx = new int[parts];
-        for(int i = 0; i<parts;i++)
-        {
+        for (int i = 0; i < parts; i++) {
             //reprendre anciennes parts de X
-            if(i<ancien)
-                partx[i]=xparts[i];
+            if (i < ancien)
+                partx[i] = xparts[i];
 
                 //Nouvelles parts de X
             else
-                partx[i]=i+1;
+                partx[i] = i + 1;
         }
         //transfert de tableau
-        xparts=partx;
+        xparts = partx;
 
         BigInteger[] party = new BigInteger[parts];
-        for(int i = 0;i<ancien; i++)
-        {
-            party[i]=yparts[i];
+        for (int i = 0; i < ancien; i++) {
+            party[i] = yparts[i];
         }
 
         //transfert de tableau
-        yparts=party;
+        yparts = party;
 
         //compléter nouvelles parts
-        for(int i = ancien; i<parts;i++)
-        {
+        for (int i = ancien; i < parts; i++) {
             trouveY(i);
         }
 
         System.out.println("Voici les nouvelles parts : ");
-        for(int i = ancien; i<parts; i++)
-        {
-            System.out.println("No : " + (i+1) + " // X = " + xparts[i] + " et Y = " + yparts[i]);
+        for (int i = ancien; i < parts; i++) {
+            System.out.println("No : " + (i + 1) + " // X = " + xparts[i] + " et Y = " + yparts[i]);
         }
 
     }
@@ -304,7 +287,7 @@ public class Shamir implements Serializable{
         BigInteger[] arrayy = new BigInteger[minParts];
         BigInteger secretFinder = null;
 
-        if(secret == null) {
+        if (secret == null) {
             return null;
         }
         System.out.println("Le nombre de part pour reconstituer secret est de " + minParts);
@@ -370,18 +353,15 @@ public class Shamir implements Serializable{
             fos.close();
 
             System.out.println("Les données ont été sauvegardées avec succès");
+        } else {
+            System.out.println("Aucune donnée ne peut être sauvegardée");
         }
-        else
-            {
-                System.out.println("Aucune donnée ne peut être sauvegardée");
-            }
 
         System.out.println("Fermeture du programme");
 
     }
 
-    private void deserialisation()
-    {
+    private void deserialisation() {
 
         File fichier = new File("serialiseSecret.ser");
 
@@ -392,14 +372,14 @@ public class Shamir implements Serializable{
         try {
             ois = new ObjectInputStream(new FileInputStream(fichier));
 
-            serial = new String();
+            serial = "";
 
-            while(ois.available()>0){
+            while (ois.available() > 0) {
                 char c = ois.readChar();
-                serial +=c ;
+                serial += c;
             }
 
-            if(serial!=null) {
+            if (serial != null) {
 
                 String[] result = serial.split("TheEnd");
 
@@ -422,28 +402,17 @@ public class Shamir implements Serializable{
                 for (int i = 0; i < part.length; i++) {
                     yparts[i] = new BigInteger(part[i]);
                 }
-            }
-            else return;
+            } else return;
 
-
-        } catch (FileNotFoundException e) {
-
-           System.out.print("Aucune sauvegarde");
 
         } catch (IOException e) {
 
-            e.printStackTrace();
+            System.out.println("Aucune donnée n'a été trouvé");
         }
     }
 
-    private boolean isSecret()
-    {
-        if(secret==null)
-        {
-            return false;
-        }
-        else
-            return true;
+    private boolean isSecret() {
+        return secret != null;
     }
 
 
