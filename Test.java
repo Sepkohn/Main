@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 
-public class Shamir implements Serializable{
+public class Test implements Serializable{
 
     Scanner scan = new Scanner(System.in);
     private BigInteger secret;
@@ -332,51 +332,66 @@ public class Shamir implements Serializable{
 
     private void saveSecret() throws IOException {
 
-        if (isSecret()) {
+        /*if(secret!=null) {
+            try {
+                File serialiseSecret = new File ("C:/tmp/serialiseSecret.ser");
+                ObjectOutputStream oos =  new ObjectOutputStream(new FileOutputStream(serialiseSecret)) ;
+                BigInteger serial = secret;
+
+                oos.writeObject(serial) ;
+                /*oos.writeObject(xparts);
+                oos.writeObject(yparts);
+                oos.close();
+
+            } catch (IOException e) {
+                System.out.println("Souci sérialisation");
+
+            }
+        }*/
+
             File fichier;
             fichier = new File("serialiseSecret.ser");
             fichier.createNewFile();
 
 
-            FileOutputStream fos = new FileOutputStream(fichier);
+                FileOutputStream fos = new FileOutputStream(fichier);
 
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
 
-            //serialisation des nombres clés
-            oos.writeChars(secret.toString() + "TheEnd");
-            oos.writeChars(prime.toString() + "TheEnd");
-            oos.writeChars(minParts + "TheEnd");
-            oos.writeChars(parts + "TheEnd");
-            oos.writeChars(partFonction.toString() + "TheEnd");
+                //serialisation des nombres clés
+                oos.writeChars(secret.toString() + "TheEnd");
+                oos.writeChars(prime.toString() + "TheEnd");
+                oos.writeChars(minParts + "TheEnd");
+                oos.writeChars(parts + "TheEnd");
+                oos.writeChars(partFonction.toString() + "TheEnd");
 
-            //serialisation des X et Y
+                //serialisation des X et Y
 
-            for (int i = 0; i < xparts.length; i++) {
-                if (i == xparts.length - 1) {
-                    oos.writeChars(xparts[i] + "TheEnd");
-                } else
-                    oos.writeChars(xparts[i] + "FinPartX");
-            }
+                for(int i = 0; i<xparts.length;i++)
+                {
+                    if(i==xparts.length-1)
+                    {
+                        oos.writeChars(xparts[i]+"TheEnd");
+                    }
+                    else
+                        oos.writeChars(xparts[i]+"FinPartX");
+                }
 
-            for (int i = 0; i < yparts.length; i++) {
-                if (i == yparts.length - 1) {
-                    oos.writeChars(yparts[i].toString() + "TheEnd");
-                } else
-                    oos.writeChars(yparts[i].toString() + "FinPartY");
-            }
+                for(int i = 0; i<yparts.length;i++)
+                {
+                    if(i==yparts.length-1)
+                    {
+                        oos.writeChars(yparts[i].toString()+ "TheEnd");
+                    }
+                    else
+                        oos.writeChars(yparts[i].toString()+"FinPartY");
+                }
 
 
-            oos.close();
-            fos.close();
 
-            System.out.println("Les données ont été sauvegardées avec succès");
-        }
-        else
-            {
-                System.out.println("Aucune donnée ne peut être sauvegardée");
-            }
+                oos.close();
+                fos.close();
 
-        System.out.println("Fermeture du programme");
 
     }
 
@@ -428,22 +443,11 @@ public class Shamir implements Serializable{
 
         } catch (FileNotFoundException e) {
 
-           System.out.print("Aucune sauvegarde");
-
+            e.printStackTrace();
         } catch (IOException e) {
 
             e.printStackTrace();
         }
-    }
-
-    private boolean isSecret()
-    {
-        if(secret==null)
-        {
-            return false;
-        }
-        else
-            return true;
     }
 
 
