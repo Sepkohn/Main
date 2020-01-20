@@ -11,7 +11,7 @@ public class MainA {
 
             Shamir secret = new Shamir();
 
-           // Test secret = new Test();
+            //Test secret = new Test();
 
             secret.deroulementApllication();
 
