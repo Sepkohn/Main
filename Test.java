@@ -4,7 +4,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Scanner;
 
 
@@ -18,10 +17,12 @@ public class Test implements Serializable {
     private BigInteger prime;
     private int minParts;
     private int parts;
-    private BigInteger[] randoms;
 
-    private int[] xparts;
+
+    private BigInteger[] xparts;
     private BigInteger[] yparts;
+
+    private BigInteger[] randoms;
 
     private int choix;
 
@@ -123,6 +124,7 @@ public class Test implements Serializable {
             case (4):
                 //methode pour trouver secret
                 findSecret();
+
                 break;
 
             //A supprimer une fois les test vérifiés
@@ -181,10 +183,10 @@ public class Test implements Serializable {
         generateRandomKey(nbrebits / 8);
 
         //je génère une part x (x=indice pour l'instant)
-        xparts = new int[parts];
+        xparts = new BigInteger[parts];
         for (int i = 0; i < xparts.length; i++) {
 
-            xparts[i] = i+1;
+            xparts[i] = BigInteger.valueOf(i+1);
         }
 
         //Je trouve le Y
@@ -214,8 +216,7 @@ public class Test implements Serializable {
     private void trouveY(int indice) {
         BigInteger temp = new BigInteger("0");
 
-        BigInteger valueX = BigInteger.valueOf(xparts[indice]);
-
+        BigInteger valueX = xparts[indice];
 
         for (int i = 0; i <randoms.length; i++) {
             temp = temp.add(randoms[i].multiply(valueX.pow(i)));
@@ -228,14 +229,11 @@ public class Test implements Serializable {
 
     private void generateRandomKey(int byteLength) throws IllegalArgumentException {
 
-        SecureRandom random;
-        byte[] bytes;
+
 
         do {
-            random = new SecureRandom();
-            bytes = new byte[byteLength];
-            random.nextBytes(bytes);
-            secret = new BigInteger(1, bytes);
+
+            secret = randomNumber(byteLength);
         }
         while(secret.bitLength()<byteLength*8);
 
@@ -249,20 +247,38 @@ public class Test implements Serializable {
         randoms[0]=secret;
 
         for(int i = 1;i<randoms.length;i++) {
-            BigInteger partFonction;
-            Random rdm = new Random();
-            byte[] bts = new byte[byteLength];
-            rdm.nextBytes(bts);
-
-            partFonction = new BigInteger(1, bts);
+            BigInteger partFonction = randomNumber(byteLength);
             if(prime.compareTo(partFonction)<1) {
                 partFonction = partFonction.mod(prime);
             }
-
             randoms[i]=partFonction;
         }
 
 
+    }
+
+    private BigInteger randomNumber(int byteLength){
+
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[byteLength];
+        random.nextBytes(bytes);
+
+        return new BigInteger(1, bytes);
+
+    }
+
+    private void generateRandoms(int byteLength){
+
+        randoms = new BigInteger[minParts];
+        randoms[0]=secret;
+
+        for(int i = 1;i<randoms.length;i++) {
+            BigInteger partFonction = randomNumber(byteLength);
+            if(prime.compareTo(partFonction)<1) {
+                partFonction = partFonction.mod(prime);
+            }
+            randoms[i]=partFonction;
+        }
     }
 
     private void ajoutPart() {
@@ -284,15 +300,14 @@ public class Test implements Serializable {
         parts += nouveauNombres;
 
 
-        int[] partx = new int[parts];
+        BigInteger[] partx = new BigInteger[parts];
         for (int i = 0; i < parts; i++) {
             //reprendre anciennes parts de X
             if (i < ancien)
                 partx[i] = xparts[i];
-
                 //Nouvelles parts de X
             else
-                partx[i] = i + 1;
+                partx[i] = BigInteger.valueOf(i + 1);
         }
         //transfert de tableau
         xparts = partx;
@@ -305,8 +320,7 @@ public class Test implements Serializable {
         //transfert de tableau
         yparts = party;
 
-        //compléter nouvelles parts
-        for (int i = ancien; i < parts; i++) {
+        for (int i = ancien; i<parts;i++){
             trouveY(i);
         }
 
@@ -317,7 +331,7 @@ public class Test implements Serializable {
 
     }
 
-    //Il reste encore la suppression d'une part, la reconstruction du secret et la sérialisation à faire
+    //Il reste encore la suppression d'une part à faire
 
 
     private boolean isSecret() {
@@ -341,9 +355,9 @@ public class Test implements Serializable {
 
         BigInteger[] arrayx = new BigInteger[minParts];
         BigInteger[] arrayy = new BigInteger[minParts];
-        BigInteger result = new BigInteger("0");
 
-        if(!isSecret()) {
+
+        if (!isSecret()) {
             System.out.println("Aucun secret n'a été crée, Veuillez recommencer");
             return;
         }
@@ -352,19 +366,27 @@ public class Test implements Serializable {
 
         //je boucle sur le nombre de parts minimum nécessaire pour la reconstitution
 
+
         for (int i = 0; i < minParts; i++) {
 
             //j'entre la coordonnée x
-            System.out.println("Entrez la part x No " + (i+1) + " : ");
+            System.out.println("Entrez la part x No " + (i + 1) + " : ");
             arrayx[i] = scan.nextBigInteger();
 
             //j'entre la coordonnée y
-            System.out.println("Entrez la part y No " + (i+1) + " : ");
+            System.out.println("Entrez la part y No " + (i + 1) + " : ");
             arrayy[i] = scan.nextBigInteger();
-
         }
 
-        BigInteger a = new BigInteger("0");
+        BigInteger result = findResult(BigInteger.valueOf(0), arrayx, arrayy);
+
+        if(result!=null)
+            System.out.println("Le secret reconstitué est le suivant : " + result);
+
+    }
+    public BigInteger findResult(BigInteger a, BigInteger[] arrayx, BigInteger[] arrayy  ){
+
+        BigInteger result = new BigInteger("0");
 
 
         for (int j = 0; j < minParts; j++) {
@@ -375,8 +397,6 @@ public class Test implements Serializable {
                 if (k != j) {
 
                     BigInteger denominator = modularSubstract(arrayx[j], arrayx[k], prime);
-
-                    //BigInteger multInv = denominator.modInverse(prime);
 
                     BigInteger multInv = multipleInverse(denominator, prime);
 
@@ -390,7 +410,7 @@ public class Test implements Serializable {
 
         }
 
-        System.out.println("Le secret reconstitué est le suivant : " + result);
+        return result;
     }
 
     private BigInteger modularSubstract(BigInteger x1, BigInteger x2, BigInteger prime){
@@ -423,7 +443,7 @@ public class Test implements Serializable {
             oos.writeChars(parts + "TheEnd");
 
 
-            //serialisation des X et Y
+            //serialisation des X et Y et randoms
 
             for (int i = 0; i < xparts.length; i++) {
                 if (i == xparts.length - 1) {
@@ -437,6 +457,12 @@ public class Test implements Serializable {
                     oos.writeChars(yparts[i].toString() + "TheEnd");
                 } else
                     oos.writeChars(yparts[i].toString() + "FinPartY");
+            }
+            for (int i = 0; i < randoms.length; i++) {
+                if (i == randoms.length - 1) {
+                    oos.writeChars(randoms[i].toString() + "TheEnd");
+                } else
+                    oos.writeChars(randoms[i].toString() + "FinRandoms");
             }
 
 
@@ -480,10 +506,10 @@ public class Test implements Serializable {
                 this.parts = Integer.parseInt(result[3]);
 
                 String[] part = result[4].split("FinPartX");
-                xparts = new int[parts];
+                xparts = new BigInteger[parts];
 
                 for (int i = 0; i < part.length; i++) {
-                    xparts[i] = Integer.parseInt(part[i]);
+                    xparts[i] = new BigInteger(part[i]);
                 }
 
                 part = result[5].split("FinPartY");
@@ -492,6 +518,13 @@ public class Test implements Serializable {
                 for (int i = 0; i < part.length; i++) {
                     yparts[i] = new BigInteger(part[i]);
                 }
+                part = result[6].split("FinRandoms");
+                randoms = new BigInteger[part.length];
+
+                for (int i = 0; i < part.length; i++) {
+                    randoms[i] = new BigInteger(part[i]);
+                }
+
             } else return;
 
 
