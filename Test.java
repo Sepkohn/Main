@@ -34,52 +34,7 @@ public class Test implements Serializable {
      * OUTPUT g = gcd(a, b)
      */
 
-    private BigInteger multipleInverse(BigInteger a, BigInteger b) {
 
-        if(a.compareTo(b)<0){
-            BigInteger temp = a;
-            a = b;
-            b= temp;
-        }
-
-        ArrayList<BigInteger> r = new ArrayList<>();
-        ArrayList<BigInteger> q = new ArrayList<>();
-        ArrayList<BigInteger> x = new ArrayList<>();
-        ArrayList<BigInteger> y = new ArrayList<>();
-
-        r.add(a);
-        r.add(b);
-
-        x.add(BigInteger.valueOf(1));
-        x.add(BigInteger.ZERO);
-
-        q.add(BigInteger.ZERO);
-        y.add(BigInteger.ZERO);
-        y.add(BigInteger.valueOf(1));
-
-        int i = 0;
-
-        do {
-            i++;
-
-            q.add(i, r.get(i - 1).divide(r.get(i)));
-
-            r.add(i + 1, r.get(i - 1).subtract(r.get(i).multiply(q.get(i))));
-
-            x.add(i + 1, x.get(i - 1).subtract(x.get(i).multiply(q.get(i))));
-            y.add(i + 1, y.get(i - 1).subtract(y.get(i).multiply(q.get(i))));
-
-        }
-        while (r.get(i + 1).compareTo(BigInteger.ZERO) > 0);
-
-        BigInteger multInverse = y.get(i);
-
-        while (multInverse.compareTo(BigInteger.ZERO) < 0) {
-            multInverse = multInverse.add(a);
-        }
-
-        return multInverse;
-    }
 
     public void deroulementApllication() throws IOException {
 
@@ -98,12 +53,12 @@ public class Test implements Serializable {
             //A supprimer une fois le test effectué
             System.out.println("5 - imprimer le secret");
             System.out.println("6 - imprimer les parts");
-            //
+            System.out.println("7 - Renouveller parts");
             System.out.println("0 - fermeture du programme");
             choix = scan.nextInt();
         }
         //A supprimer >4 et non 6
-        while (choix < 0 || choix > 6);
+        while (choix < 0 || choix > 7);
 
         deroulementApplication(choix);
     }
@@ -133,6 +88,10 @@ public class Test implements Serializable {
                 break;
             case (6):
                 imprimeParts(0);
+                break;
+            //
+            case (7):
+                updateParts();
                 break;
             //
 
@@ -223,7 +182,9 @@ public class Test implements Serializable {
         }
 
         //reduction de la part avec modulo nombre premier
+        System.out.println("mon test: y vaut " + yparts[indice]);
         yparts[indice] = temp.mod(prime);
+        System.out.println("mon test: y vaut après " + yparts[indice]);
 
     }
 
@@ -235,7 +196,7 @@ public class Test implements Serializable {
 
             secret = randomNumber(byteLength);
         }
-        while(secret.bitLength()<byteLength*8);
+        while(getByteLength()<byteLength);
 
         prime = secret.nextProbablePrime();
 
@@ -331,7 +292,72 @@ public class Test implements Serializable {
 
     }
 
-    //Il reste encore la suppression d'une part à faire
+    private void updateParts() {
+        if (isSecret()) {
+            String reponse="";
+
+            System.out.print("Voullez vous changer de seuil? (y-n) ");
+            reponse = scan.next();
+
+            switch (reponse) {
+                case ("y"):
+
+                    System.out.println("Quel est le nouveau seuil ? ");
+                    int nouveauNombre = scan.nextInt();
+
+                    if (nouveauNombre < 0)
+                        throw new IllegalArgumentException("Veuillez entrer un nombre positif");
+
+                    if(nouveauNombre>parts) {
+                        System.out.println("Veuillez choisir un seuil inférieur au nombre de part déjà créées ou ajoutez de nouvelles parts en conséquence.");
+                        System.out.println();
+                        return;
+                    }
+                    if(nouveauNombre == 1) {
+                        System.out.println("Veuillez choisir un seuil supérieur à 1.");
+                        System.out.println();
+                        return;
+                    }
+
+                    minParts = nouveauNombre;
+
+                    updatePartS();
+                    break;
+
+                case ("n"):
+                    updatePartS();
+                    break;
+            }
+
+
+
+
+        }
+    }
+
+    private void updatePartS() {
+
+        randoms = new BigInteger[minParts];
+        randoms[0]=secret;
+
+        for(int i = 1;i<randoms.length;i++) {
+            BigInteger partFonction = randomNumber(getByteLength());
+            if(prime.compareTo(partFonction)<1) {
+                partFonction = partFonction.mod(prime);
+            }
+            randoms[i]=partFonction;
+        }
+
+        for (int i = 0; i < parts; i++) {
+            trouveY(i);
+        }
+
+        System.out.println("Voici les nouvelles parts : ");
+        for (int i = 0; i < parts; i++) {
+            System.out.println("No : " + (i + 1) + " // X = " + xparts[i] + " et Y = " + yparts[i]);
+        }
+
+    }
 
 
     private boolean isSecret() {
@@ -341,17 +367,19 @@ public class Test implements Serializable {
             return true;
     }
 
+    private int getByteLength(){ return secret.bitLength()/8;}
+
 
 
     private void findSecret() {
 
         //le secret est la formule f(x) à x = 0
 
-    	/*
-    	 * - Calcul du secret à partir de parts et des éventuelles metadata.
-  			Une erreur est affichée si la reconstruction n’est pas possible.
+       /*
+        * - Calcul du secret à partir de parts et des éventuelles metadata.
+         Une erreur est affichée si la reconstruction n’est pas possible.
 
-    	 */
+        */
 
         BigInteger[] arrayx = new BigInteger[minParts];
         BigInteger[] arrayy = new BigInteger[minParts];
@@ -422,6 +450,53 @@ public class Test implements Serializable {
         }
 
         return result;
+    }
+
+    private BigInteger multipleInverse(BigInteger a, BigInteger b) {
+
+        if(a.compareTo(b)<0){
+            BigInteger temp = a;
+            a = b;
+            b= temp;
+        }
+
+        ArrayList<BigInteger> r = new ArrayList<>();
+        ArrayList<BigInteger> q = new ArrayList<>();
+        ArrayList<BigInteger> x = new ArrayList<>();
+        ArrayList<BigInteger> y = new ArrayList<>();
+
+        r.add(a);
+        r.add(b);
+
+        x.add(BigInteger.valueOf(1));
+        x.add(BigInteger.ZERO);
+
+        q.add(BigInteger.ZERO);
+        y.add(BigInteger.ZERO);
+        y.add(BigInteger.valueOf(1));
+
+        int i = 0;
+
+        do {
+            i++;
+
+            q.add(i, r.get(i - 1).divide(r.get(i)));
+
+            r.add(i + 1, r.get(i - 1).subtract(r.get(i).multiply(q.get(i))));
+
+            x.add(i + 1, x.get(i - 1).subtract(x.get(i).multiply(q.get(i))));
+            y.add(i + 1, y.get(i - 1).subtract(y.get(i).multiply(q.get(i))));
+
+        }
+        while (r.get(i + 1).compareTo(BigInteger.ZERO) > 0);
+
+        BigInteger multInverse = y.get(i);
+
+        while (multInverse.compareTo(BigInteger.ZERO) < 0) {
+            multInverse = multInverse.add(a);
+        }
+
+        return multInverse;
     }
 
     private void saveSecret() throws IOException {
@@ -533,5 +608,4 @@ public class Test implements Serializable {
             System.out.println("Aucune donnée n'a été trouvé");
         }
     }
-
 }
