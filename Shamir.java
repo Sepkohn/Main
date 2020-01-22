@@ -16,12 +16,24 @@ public class Shamir implements Serializable {
     private BigInteger secret;
     private BigInteger prime;
 
+
+
     private BigInteger[] xparts;
     private BigInteger[] yparts;
     private BigInteger[] randoms;
 
     private int minParts;
     private int parts;
+
+    public Shamir (int minParts, BigInteger prime){
+
+        this.minParts = minParts;
+        this.prime = prime;
+    }
+
+    public Shamir() {
+
+    }
 
 
     /**
@@ -159,7 +171,7 @@ public class Shamir implements Serializable {
         yparts = new BigInteger[parts];
 
         for (int i = 0; i < yparts.length; i++) {
-            findY(i);
+            findFirstY(i);
         }
 
         //imprimer les parts + meta
@@ -192,6 +204,19 @@ public class Shamir implements Serializable {
 
         BigInteger valueX = xparts[index];
 
+        yparts[index] = findResult(valueX, xparts, yparts);
+
+
+    }
+    private void findFirstY(int index) {
+        BigInteger temp = new BigInteger("0");
+
+        BigInteger valueX = xparts[index];
+
+        if(randoms==null){
+            generateRandoms(getByteLength());
+        }
+
         for (int i = 0; i <randoms.length; i++) {
             temp = temp.add(randoms[i].multiply(valueX.pow(i)));
         }
@@ -199,6 +224,8 @@ public class Shamir implements Serializable {
         yparts[index] = temp.mod(prime);
 
     }
+
+
 
     /**
      * Génération d'un secret et du nombre premier
@@ -363,7 +390,7 @@ public class Shamir implements Serializable {
         generateRandoms(getByteLength());
 
         for (int i = 0; i < parts; i++) {
-            findY(i);
+            findFirstY(i);
         }
 
         System.out.println("Voici les nouvelles parts : ");
@@ -469,7 +496,7 @@ public class Shamir implements Serializable {
         return result;
     }
 
-    private BigInteger multipleInverse(BigInteger a, BigInteger b) {
+    protected BigInteger multipleInverse(BigInteger a, BigInteger b) {
 
         if(a.compareTo(b)<0){
             BigInteger temp = a;
@@ -548,12 +575,6 @@ public class Shamir implements Serializable {
                 } else
                     oos.writeChars(yparts[i].toString() + "FinPartY");
             }
-            for (int i = 0; i < randoms.length; i++) {
-                if (i == randoms.length - 1) {
-                    oos.writeChars(randoms[i].toString() + "TheEnd");
-                } else
-                    oos.writeChars(randoms[i].toString() + "FinRandoms");
-            }
 
             oos.close();
             fos.close();
@@ -609,12 +630,7 @@ public class Shamir implements Serializable {
                 for (int i = 0; i < part.length; i++) {
                     yparts[i] = new BigInteger(part[i]);
                 }
-                part = result[6].split("FinRandoms");
-                randoms = new BigInteger[part.length];
 
-                for (int i = 0; i < part.length; i++) {
-                    randoms[i] = new BigInteger(part[i]);
-                }
 
             } else return;
 
