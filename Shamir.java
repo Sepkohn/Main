@@ -58,8 +58,7 @@ public class Shamir implements Serializable {
             System.out.println("0 - fermeture du programme");
             choice = scan.nextInt();
         }
-        //A supprimer >4 et non 6
-        while (choice < 0 || choice > 6);
+        while (choice < 0 || choice > 4);
 
         appMethods(choice);
     }
@@ -87,14 +86,6 @@ public class Shamir implements Serializable {
                 findSecret();
                 break;
 
-            //A supprimer une fois les test vérifiés
-            case (5):
-                System.out.println(secret);
-                break;
-            case (6):
-                displayParts(0);
-                break;
-
             case (0):
                 saveSecret();
                 return;
@@ -118,7 +109,7 @@ public class Shamir implements Serializable {
         System.out.print("Indiquez le nombre de bits : ");
         int bitLength = scan.nextInt();
 
-        //tests
+       
         if (bitLength < 128 || bitLength > 4096)
             throw new IllegalArgumentException("La clé doit être entre 128 et 4096 bits");
         if (bitLength % 8 != 0)
@@ -161,8 +152,7 @@ public class Shamir implements Serializable {
         for (int i = 0; i < yparts.length; i++) {
             findFirstY(i);
         }
-
-        //imprimer les parts + meta
+        
         System.out.println("Voici les differentes parts : ");
         displayParts(0);
 
@@ -279,7 +269,7 @@ public class Shamir implements Serializable {
             else
                 partx[i] = BigInteger.valueOf(i + 1);
         }
-        //transfert de tableau
+        
         xparts = partx;
 
         BigInteger[] party = new BigInteger[parts];
@@ -287,7 +277,7 @@ public class Shamir implements Serializable {
             party[i] = yparts[i];
         }
 
-        //transfert de tableau
+      
         yparts = party;
 
         for (int i = oldNumber; i<parts;i++){
@@ -307,48 +297,50 @@ public class Shamir implements Serializable {
      * et propose de modifier le nombre de parts minimum pour la reconstruction du secret.
      */
     private void updateParts() {
-        if (isSecret()) {
+        
+        if(!isSecret())
+            return;
+    
+        String response="";
 
-            String response="";
+        do {
+            System.out.print("Voullez vous changer de seuil? (y-n) ");
+            response = scan.next();
+        }while(!response.equals("y") && !response.equals("n"));
 
-            do {
-                System.out.print("Voullez vous changer de seuil? (y-n) ");
-                response = scan.next();
-            }while(!response.equals("y") && !response.equals("n"));
+        switch (response) {
 
-            switch (response) {
+            case ("y"):
+                System.out.println("Quel est le nouveau seuil ? ");
+                int newNumber = scan.nextInt();
 
-                case ("y"):
-                    System.out.println("Quel est le nouveau seuil ? ");
-                    int newNumber = scan.nextInt();
+                if (newNumber < 0)
+                    throw new IllegalArgumentException("Veuillez entrer un nombre positif");
 
-                    if (newNumber < 0)
-                        throw new IllegalArgumentException("Veuillez entrer un nombre positif");
+                if(newNumber>datas.getParts()) {
+                    System.out.println("Veuillez choisir un seuil inférieur au nombre de part déjà créées ou ajoutez de nouvelles parts en conséquence.");
+                    System.out.println();
+                    return;
+                }
+                if(newNumber == 1) {
+                    System.out.println("Veuillez choisir un seuil supérieur à 1.");
+                    System.out.println();
+                    return;
+                }
+                datas = new MetaData(newNumber, datas.getParts(), datas.getPrime());
 
-                    if(newNumber>datas.getParts()) {
-                        System.out.println("Veuillez choisir un seuil inférieur au nombre de part déjà créées ou ajoutez de nouvelles parts en conséquence.");
-                        System.out.println();
-                        return;
-                    }
-                    if(newNumber == 1) {
-                        System.out.println("Veuillez choisir un seuil supérieur à 1.");
-                        System.out.println();
-                        return;
-                    }
-                    datas = new MetaData(newNumber, datas.getParts(), datas.getPrime());
+                updatePartS();
+                break;
 
-                    updatePartS();
-                    break;
-
-                case ("n"):
-                    updatePartS();
-                    break;
-            }
-
-
-
-
+            case ("n"):
+                updatePartS();
+                break;
         }
+
+
+
+
+        
     }
     /**
      * Methode de mise à jour des parts
@@ -376,8 +368,10 @@ public class Shamir implements Serializable {
      * @return vrai si le secret existe
      */
     private boolean isSecret() {
-        if(secret==null)
+        if(secret==null){
+            System.out.println("Aucun secret n'a été défini, veuillez commencer par le générer le générer");
             return false;
+        }
         else
             return true;
     }
@@ -398,14 +392,9 @@ public class Shamir implements Serializable {
 
         BigInteger[] arrayx = new BigInteger[minParts];
         BigInteger[] arrayy = new BigInteger[minParts];
+        
 
-
-        if (!isSecret()) {
-            System.out.println("Aucun secret n'a été crée, veuillez recommencer");
-            return;
-        }
-
-        System.out.println("Le nombre de part pour reconstituer secret est de " + minParts);
+        System.out.println("Le nombre de part pour reconstituer le secret est de " + minParts);
 
 
         for (int i = 0; i < minParts; i++) {

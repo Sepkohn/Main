@@ -50,9 +50,6 @@ class ShamirTest{
                 randoms[i]=partFonction;
             }
 
-
-
-
         BigInteger[] xparts = new BigInteger[minParts];
         for (int i = 0; i < xparts.length; i++) {
             xparts[i] = BigInteger.valueOf(i+1);
@@ -74,6 +71,7 @@ class ShamirTest{
 
         MetaData data = new MetaData(minParts, parts, prime);
 
+        //test si le secret retrouvé est juste
         assertEquals(secret,data.findResult(BigInteger.ZERO, xparts, yparts));
     }
 
@@ -97,6 +95,7 @@ class ShamirTest{
             assertEquals(result.modInverse(prime), datas.multipleInverse(result,prime));
 
     }
+
 
 
 
