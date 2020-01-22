@@ -9,14 +9,11 @@ public class MainA {
             // write your code here
 
 
-            Shamir secret = new Shamir();
+            //Shamir secret = new Shamir();
 
-            //Test secret = new Test();
+            Test secret = new Test();
 
-            secret.deroulementApllication();
-
-
-
+            secret.appMethods();
 
         }
     }
