@@ -7,7 +7,8 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-class ShamirTest{
+
+class ShamirTest {
 
 
     @Test
@@ -30,32 +31,30 @@ class ShamirTest{
             secret = new BigInteger(1, bytes);
 
         }
-        while(secret.bitLength()<byteLength*8);
+        while (secret.bitLength() < byteLength * 8);
 
         prime = secret.nextProbablePrime();
 
         randoms = new BigInteger[minParts];
-        randoms[0]=secret;
+        randoms[0] = secret;
 
-        for(int i = 1;i<randoms.length;i++) {
+        for (int i = 1; i < randoms.length; i++) {
             SecureRandom random = new SecureRandom();
             byte[] bytes = new byte[byteLength];
             random.nextBytes(bytes);
 
             BigInteger rdmNumber = new BigInteger(1, bytes);
 
-            if(prime.compareTo(rdmNumber)<1) {
+            if (prime.compareTo(rdmNumber) < 1) {
                 rdmNumber = rdmNumber.mod(prime);
             }
-            randoms[i]=rdmNumber;
+            randoms[i] = rdmNumber;
         }
-
-
 
 
         BigInteger[] xparts = new BigInteger[minParts];
         for (int i = 0; i < xparts.length; i++) {
-            xparts[i] = BigInteger.valueOf(i+1);
+            xparts[i] = BigInteger.valueOf(i + 1);
         }
 
         BigInteger[] yparts = new BigInteger[minParts];
@@ -65,7 +64,7 @@ class ShamirTest{
 
             BigInteger valueX = xparts[i];
 
-            for (int j = 0; j <randoms.length; j++) {
+            for (int j = 0; j < randoms.length; j++) {
                 temp = temp.add(randoms[j].multiply(valueX.pow(j)));
             }
 
@@ -74,21 +73,21 @@ class ShamirTest{
 
         MetaData data = new MetaData(minParts, parts, prime);
 
-        assertEquals(secret,data.findResult(BigInteger.ZERO, xparts, yparts));
+        assertEquals(secret, data.findResult(BigInteger.ZERO, xparts, yparts));
     }
 
 
     @Test
-    void multipleInverse(){
+    void multipleInverse() {
 
         int byteLength = 16;
         SecureRandom random;
 
         Random rdm = new Random();
-        BigInteger prime = BigInteger.probablePrime(byteLength*8, rdm);
+        BigInteger prime = BigInteger.probablePrime(byteLength * 8, rdm);
         MetaData data = new MetaData(prime);
 
-        for(int i = 0; i< 10; i++) {
+        for (int i = 0; i < 10; i++) {
 
             random = new SecureRandom();
             byte[] bytes = new byte[byteLength];

@@ -7,16 +7,22 @@ import java.util.ArrayList;
 public class MetaData {
 
 
+    private BigInteger prime;
+    private int minParts;
+    private int parts;
+
     public MetaData(int minParts, int parts, BigInteger prime) {
         this.minParts = minParts;
         this.parts = parts;
         this.prime = prime;
     }
 
+
     public MetaData(int minParts, int parts) {
         this.minParts = minParts;
         this.parts = parts;
     }
+
     public MetaData(BigInteger prime) {
         this.prime = prime;
     }
@@ -24,7 +30,6 @@ public class MetaData {
     public BigInteger getPrime() {
         return prime;
     }
-
 
     public int getMinParts() {
         return minParts;
@@ -34,31 +39,25 @@ public class MetaData {
         return parts;
     }
 
-
-    private BigInteger prime;
-
-    private int minParts;
-    private int parts;
-
-
     /**
      * Methode de calcul pour trouver le secret ou les nouvelles parts de y
-     * @param a - valeur a 0 pour retrouver le secret ou valeur du x pour trouver la part y
+     *
+     * @param a      - valeur a 0 pour retrouver le secret ou valeur du x pour trouver la part y
      * @param arrayx - tableau constitué des parts X
      * @param arrayy - tableau constitué des parts X
      * @return le resultat du secret ou de la nouvelle part y
      */
-    public BigInteger findResult(BigInteger a, BigInteger[] arrayx, BigInteger[] arrayy  ){
+    public BigInteger findResult(BigInteger a, BigInteger[] arrayx, BigInteger[] arrayy) {
 
         BigInteger result = new BigInteger("0");
 
 
-        for(int j = 0; j < minParts; j++) {
+        for (int j = 0; j < minParts; j++) {
 
             BigInteger rv = BigInteger.ONE;
 
-            for(int k = 0; k < minParts; k++) {
-                if(k != j) {
+            for (int k = 0; k < minParts; k++) {
+                if (k != j) {
 
                     BigInteger denominator = modularSubstract(arrayx[j], arrayx[k]);
 
@@ -79,6 +78,7 @@ public class MetaData {
 
     /**
      * Methode pour calculer les inverses multiplicatifs
+     *
      * @param a = valeur du dénominateur
      * @param b = nombre premier
      * @return l'inverse multiplicatif de a
@@ -86,10 +86,10 @@ public class MetaData {
 
     protected BigInteger multipleInverse(BigInteger a, BigInteger b) {
 
-        if(a.compareTo(b)<0){
+        if (a.compareTo(b) < 0) {
             BigInteger temp = a;
             a = b;
-            b= temp;
+            b = temp;
         }
 
         ArrayList<BigInteger> r = new ArrayList<>();
@@ -131,17 +131,18 @@ public class MetaData {
 
     /**
      * Methode pour calculer une soustraction modulaire
+     *
      * @param x1 = valeur du 1er nombre
      * @param x2 = valeur du 2e nombre
      * @return la resultat de x1-x2 avec si besoin  modulo (prime)
      */
 
-    private BigInteger modularSubstract(BigInteger x1, BigInteger x2){
+    private BigInteger modularSubstract(BigInteger x1, BigInteger x2) {
 
         BigInteger result = x1.subtract(x2);
 
-        if(result.compareTo(BigInteger.ZERO)<0){
-            result= result.add(prime);
+        if (result.compareTo(BigInteger.ZERO) < 0) {
+            result = result.add(prime);
         }
 
         return result;
@@ -149,33 +150,36 @@ public class MetaData {
 
     /**
      * Generation de coefficients pour generer la fonction polynomiale
+     *
      * @param byteLength -- nombre de bits demande par l'utilisateur divise par 8
-     * @throws IllegalArgumentException
      * @return une nombre aleatoire modulo(prime)
+     * @throws IllegalArgumentException
      */
 
-    public BigInteger[] generateRandoms(int byteLength){
+    public BigInteger[] generateRandoms(int byteLength) {
 
         BigInteger[] randoms = new BigInteger[minParts];
 
-        for(int i = 1;i<randoms.length;i++) {
+        for (int i = 1; i < randoms.length; i++) {
             BigInteger rdmNumber = randomNumber(byteLength);
-            if(prime.compareTo(rdmNumber)<1) {
+            if (prime.compareTo(rdmNumber) < 1) {
                 rdmNumber = rdmNumber.mod(prime);
             }
-            randoms[i]=rdmNumber;
+            randoms[i] = rdmNumber;
         }
         return randoms;
 
     }
+
     /**
      * Generation d'un nombre aleatoire d'un nombre de Byte donne
+     *
      * @param byteLength -- nombre de bits demande par l'utilisateur divise par 8
-     * @throws IllegalArgumentException
      * @return un nombre aleatoire
+     * @throws IllegalArgumentException
      */
 
-    public BigInteger randomNumber(int byteLength){
+    public BigInteger randomNumber(int byteLength) {
 
         SecureRandom random = new SecureRandom();
         byte[] bytes = new byte[byteLength];
