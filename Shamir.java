@@ -2,8 +2,6 @@ package Main;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 
@@ -14,26 +12,12 @@ public class Shamir implements Serializable {
     Scanner scan = new Scanner(System.in);
 
     private BigInteger secret;
-    private BigInteger prime;
-
 
 
     private BigInteger[] xparts;
     private BigInteger[] yparts;
     private BigInteger[] randoms;
-
-    private int minParts;
-    private int parts;
-
-    public Shamir (int minParts, BigInteger prime){
-
-        this.minParts = minParts;
-        this.prime = prime;
-    }
-
-    public Shamir() {
-
-    }
+    MetaData datas;
 
 
     /**
@@ -56,7 +40,10 @@ public class Shamir implements Serializable {
 
         if (secret == null) {
             deserialisation();
+
         }
+
+
         int choice;
 
         do {
@@ -157,10 +144,11 @@ public class Shamir implements Serializable {
      */
     private void setSecret(int bitLength, int minParts, int parts) {
 
-        this.minParts = minParts;
-        this.parts = parts;
+        datas = new MetaData(minParts, parts);
 
         generateRandomKey(bitLength / 8);
+
+
 
         xparts = new BigInteger[parts];
         for (int i = 0; i < xparts.length; i++) {
@@ -177,7 +165,6 @@ public class Shamir implements Serializable {
         //imprimer les parts + meta
         System.out.println("Voici les differentes parts : ");
         displayParts(0);
-        System.out.println("les metadonnees sont les suivantes : " + prime);
 
     }
 
@@ -187,11 +174,12 @@ public class Shamir implements Serializable {
      */
     private void displayParts(int beginning) {
 
+        if(!isSecret())
+            return;
 
-        for (int i = beginning; i < parts; i++) {
+        for (int i = beginning; i < datas.getParts(); i++) {
             System.out.println("No : " + (i + 1) + " // X = " + xparts[i] + " et Y = " + yparts[i]);
         }
-
 
     }
 
@@ -204,7 +192,7 @@ public class Shamir implements Serializable {
 
         BigInteger valueX = xparts[index];
 
-        yparts[index] = findResult(valueX, xparts, yparts);
+        yparts[index] = datas.findResult(valueX, xparts, yparts);
 
 
     }
@@ -214,14 +202,15 @@ public class Shamir implements Serializable {
         BigInteger valueX = xparts[index];
 
         if(randoms==null){
-            generateRandoms(getByteLength());
+            randoms = datas.generateRandoms(getByteLength());
+            randoms[0]=secret;
         }
 
         for (int i = 0; i <randoms.length; i++) {
             temp = temp.add(randoms[i].multiply(valueX.pow(i)));
         }
 
-        yparts[index] = temp.mod(prime);
+        yparts[index] = temp.mod(datas.getPrime());
 
     }
 
@@ -234,50 +223,27 @@ public class Shamir implements Serializable {
      */
     private void generateRandomKey(int byteLength) throws IllegalArgumentException {
         do {
-
-            secret = randomNumber(byteLength);
+            secret = datas.randomNumber(byteLength);
         }
         while(secret.bitLength()<byteLength*8);
 
-        prime = secret.nextProbablePrime();
+        BigInteger prime = secret.nextProbablePrime();
+
+        datas = new MetaData(datas.getMinParts(), datas.getParts(), prime);
 
         if (prime.bitLength() > byteLength * 8) {
             generateRandomKey(byteLength);
         }
 
-        generateRandoms(byteLength);
-
-
-    }
-
-    private BigInteger randomNumber(int byteLength){
-
-        SecureRandom random = new SecureRandom();
-        byte[] bytes = new byte[byteLength];
-        random.nextBytes(bytes);
-
-        return new BigInteger(1, bytes);
-
-    }
-
-    /**
-     * Génération de coefficients pour générer la fonction polynomiale
-     * @param byteLength -- nombre de bits demandé par l'utilisateur divisé par 8
-     * @throws IllegalArgumentException
-     */
-    private void generateRandoms(int byteLength){
-
-        randoms = new BigInteger[minParts];
+        randoms = datas.generateRandoms(getByteLength());
         randoms[0]=secret;
 
-        for(int i = 1;i<randoms.length;i++) {
-            BigInteger partFonction = randomNumber(byteLength);
-            if(prime.compareTo(partFonction)<1) {
-                partFonction = partFonction.mod(prime);
-            }
-            randoms[i]=partFonction;
-        }
     }
+
+
+
+
+
 
     /**
      * Méthode d'initialisation d'ajout de parts du secret
@@ -300,6 +266,7 @@ public class Shamir implements Serializable {
      * @param newNumber le nombre de parts à ajouter
      */
     private void AddPart(int newNumber) {
+        int parts = datas.getParts();
         int oldNumber = parts;
 
         parts += newNumber;
@@ -332,6 +299,8 @@ public class Shamir implements Serializable {
             System.out.println("No : " + (i + 1) + " // X = " + xparts[i] + " et Y = " + yparts[i]);
         }
 
+        datas=new MetaData(datas.getMinParts(), parts, datas.getPrime());
+
     }
     /**
      * Methode d'initialisation de renouvellement des parts déja créées
@@ -356,7 +325,7 @@ public class Shamir implements Serializable {
                     if (newNumber < 0)
                         throw new IllegalArgumentException("Veuillez entrer un nombre positif");
 
-                    if(newNumber>parts) {
+                    if(newNumber>datas.getParts()) {
                         System.out.println("Veuillez choisir un seuil inférieur au nombre de part déjà créées ou ajoutez de nouvelles parts en conséquence.");
                         System.out.println();
                         return;
@@ -366,8 +335,7 @@ public class Shamir implements Serializable {
                         System.out.println();
                         return;
                     }
-
-                    minParts = newNumber;
+                    datas = new MetaData(newNumber, datas.getParts(), datas.getPrime());
 
                     updatePartS();
                     break;
@@ -387,7 +355,10 @@ public class Shamir implements Serializable {
      */
     private void updatePartS() {
 
-        generateRandoms(getByteLength());
+        int parts = datas.getParts();
+
+        randoms = datas.generateRandoms(getByteLength());
+        randoms[0]=secret;
 
         for (int i = 0; i < parts; i++) {
             findFirstY(i);
@@ -420,6 +391,11 @@ public class Shamir implements Serializable {
      */
     private void findSecret() {
 
+        if(!isSecret())
+            return;
+
+        int minParts = datas.getMinParts();
+
         BigInteger[] arrayx = new BigInteger[minParts];
         BigInteger[] arrayy = new BigInteger[minParts];
 
@@ -441,7 +417,7 @@ public class Shamir implements Serializable {
             arrayy[i] = scan.nextBigInteger();
         }
 
-        BigInteger result = findResult(BigInteger.valueOf(0), arrayx, arrayy);
+        BigInteger result = datas.findResult(BigInteger.valueOf(0), arrayx, arrayy);
 
         if(result!=null)
             System.out.println("Le secret reconstitué est le suivant : " + result);
@@ -449,97 +425,6 @@ public class Shamir implements Serializable {
             System.out.println("Une erreur s'est produite pendant la reconstrucion du secret, veuillez entrer des coordonnées valides");
     }
 
-    /**
-     * Methode de calcul
-     * @param a
-     * @param arrayx
-     * @param arrayy
-     * @return
-     */
-    public BigInteger findResult(BigInteger a, BigInteger[] arrayx, BigInteger[] arrayy  ){
-
-        BigInteger result = new BigInteger("0");
-
-
-        for (int j = 0; j < minParts; j++) {
-
-            BigInteger rv = BigInteger.ONE;
-
-            for (int k = 0; k < minParts; k++) {
-                if (k != j) {
-
-                    BigInteger denominator = modularSubstract(arrayx[j], arrayx[k], prime);
-
-                    BigInteger multInv = multipleInverse(denominator, prime);
-
-                    BigInteger numerator = modularSubstract(a, arrayx[k], prime);
-
-                    rv = rv.multiply(numerator).multiply(multInv);
-                }
-
-            }
-            result = result.add(rv.multiply(arrayy[j])).mod(prime);
-
-        }
-
-        return result;
-    }
-
-    private BigInteger modularSubstract(BigInteger x1, BigInteger x2, BigInteger prime){
-
-        BigInteger result = x1.subtract(x2);
-
-        if(result.compareTo(BigInteger.ZERO)<0){
-            result= result.add(prime);
-        }
-
-        return result;
-    }
-
-    protected BigInteger multipleInverse(BigInteger a, BigInteger b) {
-
-        if(a.compareTo(b)<0){
-            BigInteger temp = a;
-            a = b;
-            b= temp;
-        }
-
-        ArrayList<BigInteger> r = new ArrayList<>();
-        ArrayList<BigInteger> q = new ArrayList<>();
-        ArrayList<BigInteger> x = new ArrayList<>();
-        ArrayList<BigInteger> y = new ArrayList<>();
-
-        r.add(a);
-        r.add(b);
-
-        x.add(BigInteger.valueOf(1));
-        x.add(BigInteger.ZERO);
-
-        q.add(BigInteger.ZERO);
-        y.add(BigInteger.ZERO);
-        y.add(BigInteger.valueOf(1));
-
-        int i = 0;
-
-        do {
-            i++;
-
-            q.add(i, r.get(i - 1).divide(r.get(i)));
-            r.add(i + 1, r.get(i - 1).subtract(r.get(i).multiply(q.get(i))));
-            x.add(i + 1, x.get(i - 1).subtract(x.get(i).multiply(q.get(i))));
-            y.add(i + 1, y.get(i - 1).subtract(y.get(i).multiply(q.get(i))));
-
-        }
-        while (r.get(i + 1).compareTo(BigInteger.ZERO) > 0);
-
-        BigInteger multInverse = y.get(i);
-
-        while (multInverse.compareTo(BigInteger.ZERO) < 0) {
-            multInverse = multInverse.add(a);
-        }
-
-        return multInverse;
-    }
 
     /**
      * Methode de serialisation de notre secret, de la prime, du nombre de parts du secret et le nombre maximum de parts du secret
@@ -558,9 +443,9 @@ public class Shamir implements Serializable {
             ObjectOutputStream oos = new ObjectOutputStream(fos);
 
             oos.writeChars(secret.toString() + "TheEnd");
-            oos.writeChars(prime.toString() + "TheEnd");
-            oos.writeChars(minParts + "TheEnd");
-            oos.writeChars(parts + "TheEnd");
+            oos.writeChars(datas.getMinParts() + "TheEnd");
+            oos.writeChars(datas.getParts() + "TheEnd");
+            oos.writeChars(datas.getPrime().toString() + "TheEnd");
 
             for (int i = 0; i < xparts.length; i++) {
                 if (i == xparts.length - 1) {
@@ -613,9 +498,10 @@ public class Shamir implements Serializable {
                 String[] result = serial.split("TheEnd");
 
                 this.secret = new BigInteger(result[0]);
-                this.prime = new BigInteger(result[1]);
-                this.minParts = Integer.parseInt(result[2]);
-                this.parts = Integer.parseInt(result[3]);
+                int minParts=Integer.parseInt(result[1]);
+                int parts = Integer.parseInt(result[2]);
+                BigInteger prime = new BigInteger(result[3]);
+                datas = new MetaData(minParts,parts,prime);
 
                 String[] part = result[4].split("FinPartX");
                 xparts = new BigInteger[parts];
@@ -630,7 +516,6 @@ public class Shamir implements Serializable {
                 for (int i = 0; i < part.length; i++) {
                     yparts[i] = new BigInteger(part[i]);
                 }
-
 
             } else return;
 
