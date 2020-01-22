@@ -1,4 +1,4 @@
-package Main;
+package main;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -18,7 +18,7 @@ public class MetaData {
         this.parts = parts;
     }
     public MetaData(BigInteger prime) {
-       this.prime = prime;
+        this.prime = prime;
     }
 
     public BigInteger getPrime() {
@@ -28,10 +28,6 @@ public class MetaData {
 
     public int getMinParts() {
         return minParts;
-    }
-
-    public void setMinParts(int minParts) {
-        this.minParts = minParts;
     }
 
     public int getParts() {
@@ -46,29 +42,29 @@ public class MetaData {
 
 
     /**
-     * Methode de calcul
-     * @param a
-     * @param arrayx
-     * @param arrayy
-     * @return
+     * Methode de calcul pour trouver le secret ou les nouvelles parts de y
+     * @param a - valeur a 0 pour retrouver le secret ou valeur du x pour trouver la part y
+     * @param arrayx - tableau constitué des parts X
+     * @param arrayy - tableau constitué des parts X
+     * @return le resultat du secret ou de la nouvelle part y
      */
     public BigInteger findResult(BigInteger a, BigInteger[] arrayx, BigInteger[] arrayy  ){
 
         BigInteger result = new BigInteger("0");
 
 
-        for (int j = 0; j < minParts; j++) {
+        for(int j = 0; j < minParts; j++) {
 
             BigInteger rv = BigInteger.ONE;
 
-            for (int k = 0; k < minParts; k++) {
-                if (k != j) {
+            for(int k = 0; k < minParts; k++) {
+                if(k != j) {
 
-                    BigInteger denominator = modularSubstract(arrayx[j], arrayx[k], prime);
+                    BigInteger denominator = modularSubstract(arrayx[j], arrayx[k]);
 
                     BigInteger multInv = multipleInverse(denominator, prime);
 
-                    BigInteger numerator = modularSubstract(a, arrayx[k], prime);
+                    BigInteger numerator = modularSubstract(a, arrayx[k]);
 
                     rv = rv.multiply(numerator).multiply(multInv);
                 }
@@ -81,6 +77,12 @@ public class MetaData {
         return result;
     }
 
+    /**
+     * Methode pour calculer les inverses multiplicatifs
+     * @param a = valeur du dénominateur
+     * @param b = nombre premier
+     * @return l'inverse multiplicatif de a
+     */
 
     protected BigInteger multipleInverse(BigInteger a, BigInteger b) {
 
@@ -127,7 +129,14 @@ public class MetaData {
         return multInverse;
     }
 
-    private BigInteger modularSubstract(BigInteger x1, BigInteger x2, BigInteger prime){
+    /**
+     * Methode pour calculer une soustraction modulaire
+     * @param x1 = valeur du 1er nombre
+     * @param x2 = valeur du 2e nombre
+     * @return la resultat de x1-x2 avec si besoin  modulo (prime)
+     */
+
+    private BigInteger modularSubstract(BigInteger x1, BigInteger x2){
 
         BigInteger result = x1.subtract(x2);
 
@@ -139,9 +148,10 @@ public class MetaData {
     }
 
     /**
-     * Génération de coefficients pour générer la fonction polynomiale
-     * @param byteLength -- nombre de bits demandé par l'utilisateur divisé par 8
+     * Generation de coefficients pour generer la fonction polynomiale
+     * @param byteLength -- nombre de bits demande par l'utilisateur divise par 8
      * @throws IllegalArgumentException
+     * @return une nombre aleatoire modulo(prime)
      */
 
     public BigInteger[] generateRandoms(int byteLength){
@@ -149,15 +159,21 @@ public class MetaData {
         BigInteger[] randoms = new BigInteger[minParts];
 
         for(int i = 1;i<randoms.length;i++) {
-            BigInteger partFonction = randomNumber(byteLength);
-            if(prime.compareTo(partFonction)<1) {
-                partFonction = partFonction.mod(prime);
+            BigInteger rdmNumber = randomNumber(byteLength);
+            if(prime.compareTo(rdmNumber)<1) {
+                rdmNumber = rdmNumber.mod(prime);
             }
-            randoms[i]=partFonction;
+            randoms[i]=rdmNumber;
         }
         return randoms;
 
     }
+    /**
+     * Generation d'un nombre aleatoire d'un nombre de Byte donne
+     * @param byteLength -- nombre de bits demande par l'utilisateur divise par 8
+     * @throws IllegalArgumentException
+     * @return un nombre aleatoire
+     */
 
     public BigInteger randomNumber(int byteLength){
 

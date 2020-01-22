@@ -1,4 +1,4 @@
-package Main;
+package main;
 
 import org.junit.jupiter.api.Test;
 
@@ -6,9 +6,9 @@ import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
 class ShamirTest{
+
 
     @Test
     void findResult() {
@@ -34,21 +34,24 @@ class ShamirTest{
 
         prime = secret.nextProbablePrime();
 
-            randoms = new BigInteger[minParts];
-            randoms[0]=secret;
+        randoms = new BigInteger[minParts];
+        randoms[0]=secret;
 
-            for(int i = 1;i<randoms.length;i++) {
-                SecureRandom random = new SecureRandom();
-                byte[] bytes = new byte[byteLength];
-                random.nextBytes(bytes);
+        for(int i = 1;i<randoms.length;i++) {
+            SecureRandom random = new SecureRandom();
+            byte[] bytes = new byte[byteLength];
+            random.nextBytes(bytes);
 
-                BigInteger partFonction = new BigInteger(1, bytes);
+            BigInteger rdmNumber = new BigInteger(1, bytes);
 
-                if(prime.compareTo(partFonction)<1) {
-                    partFonction = partFonction.mod(prime);
-                }
-                randoms[i]=partFonction;
+            if(prime.compareTo(rdmNumber)<1) {
+                rdmNumber = rdmNumber.mod(prime);
             }
+            randoms[i]=rdmNumber;
+        }
+
+
+
 
         BigInteger[] xparts = new BigInteger[minParts];
         for (int i = 0; i < xparts.length; i++) {
@@ -71,33 +74,32 @@ class ShamirTest{
 
         MetaData data = new MetaData(minParts, parts, prime);
 
-        //test si le secret retrouvé est juste
         assertEquals(secret,data.findResult(BigInteger.ZERO, xparts, yparts));
     }
+
 
     @Test
     void multipleInverse(){
 
         int byteLength = 16;
-        SecureRandom random = null;
+        SecureRandom random;
 
         Random rdm = new Random();
         BigInteger prime = BigInteger.probablePrime(byteLength*8, rdm);
-        MetaData datas = new MetaData(prime);
+        MetaData data = new MetaData(prime);
 
-        for(int i = 0; i< 10; i++)
+        for(int i = 0; i< 10; i++) {
+
             random = new SecureRandom();
             byte[] bytes = new byte[byteLength];
             random.nextBytes(bytes);
 
-            BigInteger result = new BigInteger(1, bytes);
 
-            assertEquals(result.modInverse(prime), datas.multipleInverse(result,prime));
+            BigInteger result = new BigInteger(1, bytes).mod(prime);
 
+            assertEquals(result.modInverse(prime), data.multipleInverse(result, prime));
+
+        }
     }
-
-
-
-
 
 }
